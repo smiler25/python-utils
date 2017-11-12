@@ -1,2 +1,2 @@
 # python-utils
-simple useful python functions
+simple useful python3 functions
