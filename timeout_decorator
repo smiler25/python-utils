@@ -1,0 +1,44 @@
+"""timeout decorator"""
+
+import time
+import signal
+from functools import wraps
+
+
+def timeout(seconds: int, value_on_timeout=None):
+    def wrapper(func):
+        @wraps(func)
+        def time_limited(*args, **kwargs):
+            def handler(signum, frame):
+                raise TimeoutError(f'Timeout for function `{func.__qualname__}`')
+
+            signal.signal(signal.SIGALRM, handler)
+            signal.alarm(seconds)
+
+            result = None
+            try:
+                result = func(*args, **kwargs)
+            except TimeoutError as exc:
+                print('EXC', exc)
+                return value_on_timeout
+            finally:
+                signal.alarm(0)
+
+            return result
+
+        return time_limited
+
+    return wrapper
+
+
+@timeout(5, value_on_timeout='too slow')
+def timeout_example(arg):
+    i = 0
+    while True:
+        print(f'iterations {i} {arg}...')
+        i += 1
+        time.sleep(1)
+
+
+results = timeout_example('test')
+print('RES', results)
